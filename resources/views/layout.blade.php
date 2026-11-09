@@ -13,6 +13,11 @@
             integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
             crossorigin="anonymous"
         />
+        <style>
+            body {
+                font-family: 'Nunito', sans-serif;
+            }
+        </style>
     </head>
 
     <body>
@@ -32,7 +37,10 @@
                         <a class="nav-link {{ request()->is('contacts') ? 'active' : '' }}" @if(request()->is('contacts')) aria-current="page" @endif href="{{ url('/contacts') }}">Контакты</a>
                         </li>
                         <li class="nav-item">
-                        <a class="nav-link {{ request()->is('/article/show') ? 'active' : '' }}" @if(request()->is('/article/show')) aria-current="page" @endif href="{{ url('/article/show') }}">Статьи</a>
+                        <a class="nav-link {{ request()->is('/article') ? 'active' : '' }}" @if(request()->is('/article')) aria-current="page" @endif href="{{ url('/article') }}">Статьи</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link {{ request()->is('/article/create') ? 'active' : '' }}" @if(request()->is('/article/create')) aria-current="page" @endif href="{{ url('/article/create') }}">Создать статью</a>
                         </li>
                                             
                     </ul>
