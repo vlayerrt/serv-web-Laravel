@@ -31,6 +31,9 @@
                         <li class="nav-item">
                         <a class="nav-link {{ request()->is('contacts') ? 'active' : '' }}" @if(request()->is('contacts')) aria-current="page" @endif href="{{ url('/contacts') }}">Контакты</a>
                         </li>
+                        <li class="nav-item">
+                        <a class="nav-link {{ request()->is('/article/show') ? 'active' : '' }}" @if(request()->is('/article/show')) aria-current="page" @endif href="{{ url('/article/show') }}">Статьи</a>
+                        </li>
                                             
                     </ul>
                     <form class="d-flex">
