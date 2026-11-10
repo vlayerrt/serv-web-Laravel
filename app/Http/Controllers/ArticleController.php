@@ -21,6 +21,7 @@ class ArticleController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', [self::class]);
         return view('articles/create');
     }
 
@@ -57,6 +58,7 @@ class ArticleController extends Controller
      */
     public function edit(Article $article)
     {
+        $this->authorize('update', [self::class]);
         return view('articles/edit', ['article'=>$article]);
     }
 
@@ -83,6 +85,7 @@ class ArticleController extends Controller
      */
     public function destroy(Article $article)
     {
+        $this->authorize('delete', [self::class]);
         $article->delete();
         return redirect()->route('article.index');
     }

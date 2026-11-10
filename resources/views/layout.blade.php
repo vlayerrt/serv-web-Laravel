@@ -36,12 +36,14 @@
                         <li class="nav-item">
                         <a class="nav-link {{ request()->is('contacts') ? 'active' : '' }}" @if(request()->is('contacts')) aria-current="page" @endif href="{{ url('/contacts') }}">Контакты</a>
                         </li>
+                        <!-- {{--  @can('article') --}} -->
                         <li class="nav-item">
                         <a class="nav-link {{ request()->is('/article') ? 'active' : '' }}" @if(request()->is('/article')) aria-current="page" @endif href="{{ url('/article') }}">Статьи</a>
                         </li>
                         <li class="nav-item">
                         <a class="nav-link {{ request()->is('/article/create') ? 'active' : '' }}" @if(request()->is('/article/create')) aria-current="page" @endif href="{{ url('/article/create') }}">Создать статью</a>
                         </li>
+                        <!-- {{-- @endcan --}} -->
                                             
                     </ul>
                     <form class="d-flex">
