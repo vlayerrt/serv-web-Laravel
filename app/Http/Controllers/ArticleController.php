@@ -2,95 +2,72 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Article;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\ArticleMail;
+use App\Events\NewArticleEvent;
 use App\Jobs\VeryLongJob;
+use App\Models\Article;
+use App\Models\User;
+use App\Notifications\NewArticleNotification;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Notification;
 
 class ArticleController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        $articles = Article::latest()->paginate(5);
-        return view('articles/index', ['articles' => $articles]);
+        $articles = Cache::remember('articles:page:'.request('page', 1), now()->addMinutes(10), fn () => Article::latest()->paginate(5));
+        return view('articles.index', compact('articles'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $this->authorize('create', [self::class]);
-        return view('articles/create');
-    }
+    public function create() { $this->authorize('article'); return view('articles.create'); }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $request->validate([
-        'datePublic'=>'required',
-        'title'=>'required',
-        'desc'=>'required'
+        $this->authorize('article');
+        $data = $request->validate([
+            'datePublic' => ['required', 'date'], 'title' => ['required', 'string', 'max:255'],
+            'shortDesc' => ['nullable', 'string', 'max:255'], 'desc' => ['required', 'string'],
         ]);
-
-        $article=new Article;
-        $article->datePublic = $request->datePublic;
-        $article->title = $request->title;
-        $article->shortDesc = $request->shortDesc;
-        $article->desc = $request->desc;
-        $result = $article->save();
-        if($result) VeryLongJob::dispatch($article);
-        return redirect(route('article.index'));
+        $article = Article::create($data);
+        Cache::flush();
+        $readers = User::query()
+            ->where(function ($query) {
+                $query->where('role_id', 2)->orWhereNull('role_id');
+            })
+            ->whereKeyNot(auth()->id())
+            ->get();
+        Notification::send($readers, new NewArticleNotification($article));
+        event(new NewArticleEvent($article));
+        if (config('app.legacy_article_mail', false)) VeryLongJob::dispatch($article);
+        return redirect()->route('article.show', $article)->with('status', 'Статья добавлена.');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Article $article)
     {
-        return view('articles/show', ['article'=>$article]);
+        $cachedArticle = Cache::rememberForever('article:'.$article->id, fn () => $article->load(['comments' => fn ($query) => $query->where('is_approved', true)->with('user')->latest()]));
+        return view('articles.show', ['article' => $cachedArticle]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Article $article)
-    {
-        $this->authorize('update', [self::class]);
-        return view('articles/edit', ['article'=>$article]);
-    }
+    public function edit(Article $article) { $this->authorize('article'); return view('articles.edit', compact('article')); }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Article $article)
     {
-        $request->validate([
-            'datePublic'=>'required',
-            'title'=>'required',
-            'desc'=>'required'
-        ]);
-        $article->datePublic = $request->datePublic;
-        $article->title = $request->title;
-        $article->shortDesc = $request->shortDesc;
-        $article->desc = $request->desc;
-        $article->save();
-        return redirect(route('article.show', ['article'=>$article->id]));
+        $this->authorize('article');
+        $article->update($request->validate([
+            'datePublic' => ['required', 'date'], 'title' => ['required', 'string', 'max:255'],
+            'shortDesc' => ['nullable', 'string', 'max:255'], 'desc' => ['required', 'string'],
+        ]));
+        Cache::forget('article:'.$article->id);
+        Cache::flush();
+        return redirect()->route('article.show', $article)->with('status', 'Статья обновлена.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Article $article)
     {
-        $this->authorize('delete', [self::class]);
+        $this->authorize('article');
+        Cache::forget('article:'.$article->id);
+        Cache::flush();
         $article->delete();
-        return redirect()->route('article.index');
+        return redirect()->route('article.index')->with('status', 'Статья удалена.');
     }
 }

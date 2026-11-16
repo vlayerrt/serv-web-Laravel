@@ -1,90 +1,38 @@
-<!doctype html> 
-<html lang="en" data-bs-theme="dark">
-    <head>
-        <title>Новости</title>
-        <!-- Required meta tags -->
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-        <!-- Bootstrap CSS v5.3.8 -->
-        <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-            integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
-            crossorigin="anonymous"
-        />
-        <style>
-            body {
-                font-family: 'Nunito', sans-serif;
-            }
-        </style>
-    </head>
-
-    <body>
-        <header>
-            <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-                <div class="container-fluid">
-                    <a class="navbar-brand" href="{{ url('/') }}">Главная</a>
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                        <a class="nav-link {{ request()->is('about') ? 'active' : '' }}" @if(request()->is('about')) aria-current="page" @endif href="{{ url('/about') }}">О нас</a>
-                        </li>
-                        <li class="nav-item">
-                        <a class="nav-link {{ request()->is('contacts') ? 'active' : '' }}" @if(request()->is('contacts')) aria-current="page" @endif href="{{ url('/contacts') }}">Контакты</a>
-                        </li>
-                        <!-- {{--  @can('article') --}} -->
-                        <li class="nav-item">
-                        <a class="nav-link {{ request()->is('/article') ? 'active' : '' }}" @if(request()->is('/article')) aria-current="page" @endif href="{{ url('/article') }}">Статьи</a>
-                        </li>
-                        <li class="nav-item">
-                        <a class="nav-link {{ request()->is('/article/create') ? 'active' : '' }}" @if(request()->is('/article/create')) aria-current="page" @endif href="{{ url('/article/create') }}">Создать статью</a>
-                        </li>
-                        <!-- {{-- @endcan --}} -->
-                                            
-                    </ul>
-                    <form class="d-flex">
-                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                            @guest
-                            <li class="nav-item">
-                            <a class="nav-link" href="/auth/create">Регистрация</a>
-                            </li>
-                            <li class="nav-item">
-                            <a class="nav-link" href="/auth/login">Войти</a>
-                            </li>
-                            @endguest
-                            @auth
-                            <li class="nav-item">
-                            <a class="nav-link" href="/auth/logout">Выйти</a>
-                            </li>
-                            @endauth
-                        </ul>
-                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                        <button class="btn btn-outline-success" type="submit">Search</button>
-                    </form>
-                    </div>
-                </div>
-                </nav>
-        </header>
-        <main class="flex-shrink-0">
-            <div class="container">
-                @yield('content')
-            </div>
-        </main>
-        <footer class="footer mt-auto py-3 bg-dark">
-        <div class="container fixed-bottom">
-            <span class="text-muted">Ершов Владислав Владимирович</span>
-            <span class="text-muted">Группа 257-321</span>
-        </div>
-        </footer>
-        <!-- Bootstrap JavaScript Bundle (includes Popper) -->
-        <script
-            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-            crossorigin="anonymous"
-        ></script>
-    </body>
-</html>
+<!doctype html>
+<html lang="ru" data-bs-theme="light">
+<head>
+    <title>Новости на Laravel</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body>
+<header><nav class="navbar navbar-expand-lg navbar-dark bg-dark"><div class="container">
+    <a class="navbar-brand" href="{{ url('/') }}">Новости</a>
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#mainNav"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="mainNav"><ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="{{ route('article.index') }}">Статьи</a></li>
+        @auth
+            @if(auth()->user()->role_id == 1)
+                <li class="nav-item"><a class="nav-link" href="{{ route('article.create') }}">Создать статью</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ route('comments.pending') }}">Модерация</a></li>
+            @endif
+        @endauth
+        <li class="nav-item"><a class="nav-link" href="{{ url('/about') }}">О нас</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url('/contacts') }}">Контакты</a></li>
+    </ul><ul class="navbar-nav ms-auto align-items-lg-center">
+        @auth
+            <li id="notifications-menu" class="nav-item dropdown"></li>
+            <li class="nav-item"><form method="post" action="{{ route('logout') }}">@csrf<button class="nav-link border-0 bg-transparent">Выйти</button></form></li>
+        @else
+            <li class="nav-item"><a class="nav-link" href="/auth/create">Регистрация</a></li><li class="nav-item"><a class="nav-link" href="{{ route('login') }}">Войти</a></li>
+        @endauth
+    </ul></div>
+</div></nav></header>
+<main class="container py-4">
+    @if(session('status'))<div class="alert alert-success">{{ session('status') }}</div>@endif
+    <div id="app"></div>
+    @yield('content')
+</main>
+<footer class="border-top py-3"><div class="container text-muted small">Ершов Владислав Владимирович · Группа 257-321</div></footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body></html>
